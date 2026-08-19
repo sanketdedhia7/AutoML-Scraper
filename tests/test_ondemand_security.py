@@ -38,13 +38,13 @@ def test_pinned_dns_context():
     target_host = "example.com"
     target_ip = "93.184.215.14"
 
-    orig_addr = socket.getaddrinfo("example.com", 80)
+    orig_getaddrinfo = socket.getaddrinfo
     with pinned_dns_context(target_host, target_ip):
         patched_addr = socket.getaddrinfo("example.com", 80)
         assert patched_addr[0][4][0] == target_ip
+        assert socket.getaddrinfo is not orig_getaddrinfo
 
-    restored_addr = socket.getaddrinfo("example.com", 80)
-    assert restored_addr == orig_addr
+    assert socket.getaddrinfo is orig_getaddrinfo
 
 
 def test_ondemand_schema_validation():
@@ -110,7 +110,7 @@ def test_api_scrape_url_valid_queue(monkeypatch):
 
     # Mock network fetch, DNS validation, ScraperManager CLI, and SentenceTransformer model load
     monkeypatch.setattr("monitoring.routes.resolve_and_validate_ip", lambda host: "93.184.216.34")
-    monkeypatch.setattr("pipeline.ondemand_runner.safe_fetch_html", lambda url, **kwargs: "<h1>Test Page</h1><p>This is a test article body content for unit testing.</p>")
+    monkeypatch.setattr("pipeline.ondemand.fallback_extractor.safe_fetch_html", lambda url, **kwargs: "<h1>Test Page</h1><p>This is a test article body content for unit testing.</p>")
     monkeypatch.setattr("scrapers.collector_registry.ScraperManager.create_scraper", lambda self, cfg: {"id": "col_mock123", "status": "mock"})
     monkeypatch.setattr("pipeline.deduplicator._get_sentence_transformer", lambda: None)
     
