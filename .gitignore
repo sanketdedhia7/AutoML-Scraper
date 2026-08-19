@@ -1,0 +1,45 @@
+# Python environment
+venv/
+.venv/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+# Environment variables
+.env
+
+# Project data
+data/**/*.json
+data/**/*.jsonl
+data/*.json
+data/*.jsonl
+
+# Logs
+*.log
+logs/
+
+# Keep directories but ignore their contents (using .gitkeep)
+!data/raw/.gitkeep
+!data/cleaned/.gitkeep
+!data/deduplicated/.gitkeep
+!data/scored/.gitkeep
+!data/exports/.gitkeep
+!data/repairs/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Explicit requested ignores
+data/exports/*.jsonl
+data/repairs/*.jsonl
