@@ -1,0 +1,7 @@
+{
+  "container": ".post-block",
+  "title": ".heading-link",
+  "author": ".creator-name",
+  "publication_date": ".pub-time",
+  "content": ".body-content"
+}

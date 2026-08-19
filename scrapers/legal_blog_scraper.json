@@ -1,0 +1,24 @@
+{
+  "name": "legal_blog_scraper",
+  "url": "https://example-legal-blog.com",
+  "fields": [
+    {
+      "name": "title",
+      "description": "Article title (usually in h1 or h2 tag)"
+    },
+    {
+      "name": "author",
+      "description": "Author name (usually in byline or meta tag)"
+    },
+    {
+      "name": "publication_date",
+      "description": "Publication date (usually in time tag or meta)"
+    },
+    {
+      "name": "content",
+      "description": "Article body text (main content area)"
+    }
+  ],
+  "schedule": "0 */6 * * *",
+  "output_format": "json"
+}

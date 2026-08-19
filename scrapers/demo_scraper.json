@@ -1,0 +1,24 @@
+{
+  "name": "demo_scraper",
+  "url": "https://example-journal.com",
+  "fields": [
+    {
+      "name": "title",
+      "description": "Article title"
+    },
+    {
+      "name": "author",
+      "description": "Article author"
+    },
+    {
+      "name": "publication_date",
+      "description": "Publication date"
+    },
+    {
+      "name": "content",
+      "description": "Abstract/body text content"
+    }
+  ],
+  "schedule": "0 12 * * *",
+  "output_format": "json"
+}

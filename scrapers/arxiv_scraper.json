@@ -1,0 +1,28 @@
+{
+  "name": "arxiv_scraper",
+  "url": "https://arxiv.org",
+  "fields": [
+    {
+      "name": "title",
+      "description": "Paper title"
+    },
+    {
+      "name": "authors",
+      "description": "Paper authors list"
+    },
+    {
+      "name": "publication_date",
+      "description": "Submission or publication date"
+    },
+    {
+      "name": "abstract",
+      "description": "Paper abstract summary"
+    },
+    {
+      "name": "content",
+      "description": "Main body text if available or parsed PDF text"
+    }
+  ],
+  "schedule": "0 12 * * *",
+  "output_format": "json"
+}

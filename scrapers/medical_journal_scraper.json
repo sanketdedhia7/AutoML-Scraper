@@ -1,0 +1,28 @@
+{
+  "name": "medical_journal_scraper",
+  "url": "https://example-medical-journal.com",
+  "fields": [
+    {
+      "name": "title",
+      "description": "Journal article title (usually in h1 or header tag)"
+    },
+    {
+      "name": "authors",
+      "description": "List of authors or primary author"
+    },
+    {
+      "name": "publication_date",
+      "description": "Publication or release date"
+    },
+    {
+      "name": "abstract",
+      "description": "Abstract of the article"
+    },
+    {
+      "name": "content",
+      "description": "Full text body content"
+    }
+  ],
+  "schedule": "0 0 * * *",
+  "output_format": "json"
+}
