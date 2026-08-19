@@ -8,6 +8,7 @@ import subprocess
 @pytest.fixture
 def healer(monkeypatch):
     monkeypatch.setenv("BRIGHT_DATA_API_KEY", "fake-api-key")
+    monkeypatch.setattr("shutil.which", lambda x: "/usr/bin/bdata" if x == "bdata" else None)
     return Healer()
 
 @patch('subprocess.run')
