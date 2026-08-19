@@ -1,0 +1,10 @@
+{
+  "name": "automl-scraper",
+  "version": "1.0.0",
+  "description": "AutoML Data Scraper & Self-Healing Pipeline",
+  "main": "run_server.py",
+  "dependencies": {
+    "@brightdata/cli": "^0.3.4"
+  },
+  "private": true
+}

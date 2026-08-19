@@ -1,14 +1,14 @@
 import logging
 import trafilatura
 from bs4 import BeautifulSoup
-import pipeline.ondemand_runner
+from pipeline.security import safe_fetch_html
 
 class FallbackExtractor:
     """Safe HTML retrieval and text extraction heuristic."""
 
     def fetch_and_extract_text(self, target_url: str) -> str:
         """Fetch remote HTML securely and extract plain content."""
-        raw_html = pipeline.ondemand_runner.safe_fetch_html(target_url, max_redirects=3, timeout=15.0)
+        raw_html = safe_fetch_html(target_url, max_redirects=3, timeout=15.0)
         cleaned_text = trafilatura.extract(raw_html, include_links=True, include_formatting=False)
         
         if not cleaned_text or len(cleaned_text.strip()) < 50:

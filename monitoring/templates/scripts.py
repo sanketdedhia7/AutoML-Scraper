@@ -244,7 +244,21 @@ def get_dashboard_scripts(articles_json: str, quality_stats_json: str, threshold
                     data.forEach(entry => {{
                         const res = entry.result || {{}};
                         const status = res.status || (entry.success ? 'success' : 'error');
-                        const ts = (entry.timestamp || '').replace('T', ' ').slice(0, 19);
+                        let ts = entry.timestamp || '';
+                        if (ts) {{
+                            let normalized = ts;
+                            if (!normalized.includes('T')) {{
+                                normalized = normalized.replace(' ', 'T');
+                            }}
+                            if (!normalized.endsWith('Z') && !normalized.includes('+') && !normalized.includes('-') && normalized.split('-').length === 3) {{
+                                normalized += 'Z';
+                            }}
+                            const d = new Date(normalized);
+                            if (!isNaN(d.getTime())) {{
+                                const pad = (n) => String(n).padStart(2, '0');
+                                ts = `${{d.getFullYear()}}-${{pad(d.getMonth() + 1)}}-${{pad(d.getDate())}} ${{pad(d.getHours())}}:${{pad(d.getMinutes())}}:${{pad(d.getSeconds())}}`;
+                            }}
+                        }}
                         const card = document.createElement('div');
                         card.className = 'repair-card';
                         if (entry.collector_id) {{

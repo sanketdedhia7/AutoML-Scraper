@@ -8,6 +8,11 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Add local node_modules/.bin to PATH so local npm installations are discoverable
+node_modules_bin = str(PROJECT_ROOT / "node_modules" / ".bin")
+if node_modules_bin not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = node_modules_bin + os.pathsep + os.environ.get("PATH", "")
+
 # Configurable timeouts with environment overrides
 TIMEOUT_API_REQUEST = int(os.getenv("TIMEOUT_API_REQUEST", "30"))
 TIMEOUT_HEAL_SUBPROCESS = int(os.getenv("TIMEOUT_HEAL_SUBPROCESS", "120"))

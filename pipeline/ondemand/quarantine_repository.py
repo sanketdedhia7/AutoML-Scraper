@@ -17,7 +17,7 @@ class QuarantineRepository:
         
         collector_id = f"ondemand_{uuid.uuid4().hex[:6]}"
         quarantine_record = {
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "collector_id": collector_id,
             "broken_url": target_url,
             "issue": f"On-demand user submission ({extraction_source})",
