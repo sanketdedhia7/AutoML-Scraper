@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import datetime
 from datetime import timezone
@@ -8,10 +8,19 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Add local node_modules/.bin to PATH so local npm installations are discoverable
-node_modules_bin = str(PROJECT_ROOT / "node_modules" / ".bin")
-if node_modules_bin not in os.environ.get("PATH", ""):
-    os.environ["PATH"] = node_modules_bin + os.pathsep + os.environ.get("PATH", "")
+# Add node_modules/.bin and global Linux/Render binary paths to PATH
+extra_paths = [
+    str(PROJECT_ROOT / "node_modules" / ".bin"),
+    "/usr/local/bin",
+    "/usr/bin",
+    "/bin",
+    "/opt/render/project/src/node_modules/.bin",
+]
+current_path = os.environ.get("PATH", "")
+for p in extra_paths:
+    if p not in current_path:
+        current_path = p + os.pathsep + current_path
+os.environ["PATH"] = current_path
 
 # Configurable timeouts with environment overrides
 TIMEOUT_API_REQUEST = int(os.getenv("TIMEOUT_API_REQUEST", "30"))
@@ -37,7 +46,7 @@ def atomic_write_json(file_path: Path, data: Any, indent: int = 2):
     file_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = file_path.with_name(f"{file_path.name}.tmp")
     try:
-        with open(tmp_path, 'w', encoding='utf-8') as f:
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=indent)
         os.replace(tmp_path, file_path)
     except Exception as e:
@@ -56,7 +65,7 @@ def ensure_directories():
         "data/deduplicated",
         "data/scored",
         "data/exports",
-        "data/repairs"
+        "data/repairs",
     ]
     for d in dirs:
         (PROJECT_ROOT / d).mkdir(parents=True, exist_ok=True)
@@ -71,7 +80,7 @@ def load_scraper_states() -> dict:
         if not path.exists():
             return {}
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
@@ -82,10 +91,8 @@ def save_scraper_states(states: dict):
     tmp_path = path.with_suffix(".tmp")
     with _state_lock:
         try:
-            # Write to temporary file first
-            with open(tmp_path, 'w', encoding='utf-8') as f:
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(states, f, indent=2)
-            # Atomically replace the destination file
             os.replace(tmp_path, path)
         except Exception as e:
             if os.path.exists(tmp_path):
@@ -100,14 +107,14 @@ def update_scraper_state(
     status: str,
     last_run: str = None,
     articles_extracted: int = 0,
-    validation_errors: list = None
+    validation_errors: list = None,
 ):
     """Update the state of a single scraper in a thread-safe atomic manner"""
     ensure_directories()
     with _state_lock:
         states = load_scraper_states()
         now_str = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        
+
         state = states.setdefault(collector_id, {})
         state["collector_id"] = collector_id
         state["status"] = status
@@ -116,6 +123,5 @@ def update_scraper_state(
         state["articles_extracted"] = articles_extracted
         state["validation_errors"] = validation_errors or []
         state["last_updated"] = now_str
-        
-        save_scraper_states(states)
 
+        save_scraper_states(states)

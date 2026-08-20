@@ -19,44 +19,58 @@ class ScraperManager:
         self.cli = BrightDataCLI(self.api_key)
 
     def _mock_mode(self) -> bool:
-        """
-        Mock mode is active ONLY when no valid API key is configured.
-        """
+        """Mock mode is active ONLY when no valid API key is configured."""
         return not self.api_key or self.api_key == "your_api_key_here"
 
     def scrape_url_via_brightdata(self, target_url: str) -> str:
-        """Scrape raw page HTML via Bright Data CLI (`bdata scrape`) or Web Unlocker API fallback."""
+        """
+        Scrape raw page HTML via Bright Data Scraper Studio CLI or Web Unlocker REST API.
+        
+        Guarantees 100% real Bright Data infrastructure execution:
+        1. Attempts bdata scrape CLI (--zone cli_unlocker -f html)
+        2. Falls back to Bright Data REST API (POST https://api.brightdata.com/request)
+        """
         if self._mock_mode():
             raise RuntimeError("Mock mode active - no API key configured.")
 
-        # Try CLI first (`bdata scrape <url> -f html`)
-        import shutil
-        if shutil.which("bdata"):
-            try:
-                return self.cli.scrape_url(target_url)
-            except Exception as exc:
-                logging.warning(f"bdata CLI scrape failed for {target_url}: {exc}. Trying REST API fallback.")
-
-        # Fallback to direct Web Unlocker API if CLI is unavailable
+        # Path 1: Bright Data CLI
         try:
+            logging.info(f"Attempting Bright Data CLI scrape for {target_url}...")
+            html_output = self.cli.scrape_url(target_url)
+            if html_output and len(html_output.strip()) > 50:
+                logging.info(f"Bright Data CLI scrape succeeded for {target_url} ({len(html_output)} bytes).")
+                return html_output
+        except Exception as exc:
+            logging.warning(f"bdata CLI scrape failed for {target_url}: {exc}. Switching to Bright Data REST API.")
+
+        # Path 2: Direct Bright Data Web Unlocker REST API (POST /request)
+        try:
+            logging.info(f"Executing direct Bright Data Web Unlocker REST API for {target_url}...")
             resp = requests.post(
-                f"{self.base_url}/zone/route",
+                f"{self.base_url}/request",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json"
                 },
-                json={"url": target_url, "zone": "web_unlocker", "format": "raw"},
+                json={
+                    "zone": "cli_unlocker",
+                    "url": target_url,
+                    "format": "raw"
+                },
                 timeout=60
             )
-            if resp.status_code == 200 and resp.text:
+            if resp.status_code == 200 and resp.text and len(resp.text.strip()) > 50:
+                logging.info(f"Bright Data Web Unlocker REST API succeeded for {target_url} ({len(resp.text)} bytes).")
                 return resp.text
+            else:
+                logging.warning(f"Bright Data REST API returned HTTP {resp.status_code}: {resp.text[:300]}")
         except Exception as e:
-            logging.warning(f"Direct Bright Data Web Unlocker API request failed: {e}")
+            logging.warning(f"Direct Bright Data Web Unlocker REST API request failed: {e}")
 
         raise RuntimeError(f"Unable to scrape {target_url} via Bright Data.")
 
     def create_scraper(self, config_path: str) -> dict:
-        """Create a Scraper Studio collector via CLI (preferred) or REST API fallback."""
+        """Create a Scraper Studio collector via CLI or REST API fallback."""
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
