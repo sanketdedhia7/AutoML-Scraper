@@ -1001,6 +1001,27 @@ DASHBOARD_STYLES = """
                 flex: 1;
                 overflow-y: auto;
                 border-radius: 2px;
+                white-space: pre-wrap; /* Preserve newlines and markdown list structures */
+            }
+            .export-btn {
+                background-color: var(--border-ledger);
+                border: 1px solid var(--dust-grey);
+                color: var(--parchment-white);
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.65rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                padding: 4px 8px;
+                cursor: pointer;
+                border-radius: 2px;
+                transition: border-color 0.25s var(--kintsugi-ease), transform 0.2s var(--kintsugi-ease);
+            }
+            .export-btn:hover {
+                border-color: var(--parchment-white);
+                transform: scale(1.03);
+            }
+            .export-btn:active {
+                transform: scale(0.97);
             }
             .diff-box.raw {
                 font-family: 'JetBrains Mono', monospace;

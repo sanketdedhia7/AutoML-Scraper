@@ -232,7 +232,14 @@ def get_dashboard_body(curated_date: str, accepted_articles: int, rejected_artic
                         </div>
                         
                         <div class="diff-column">
-                            <div class="diff-title" style="color: var(--verdigris-green)">Restored Segment (Curated Markdown)</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div class="diff-title" style="color: var(--verdigris-green); margin-bottom: 0;">Restored Segment (Curated Markdown)</div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="export-btn" id="btn-copy-clean" title="Copy text to clipboard">Copy</button>
+                                    <button class="export-btn" id="btn-download-csv" title="Download as CSV">CSV</button>
+                                    <button class="export-btn" id="btn-download-docx" title="Download as Word DOCX">DOCX</button>
+                                </div>
+                            </div>
                             <div class="diff-box clean" id="diff-clean"></div>
                         </div>
                     </div>
