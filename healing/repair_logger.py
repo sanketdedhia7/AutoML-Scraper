@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 class RepairLogger:
@@ -10,8 +10,9 @@ class RepairLogger:
     
     def log_repair(self, collector_id: str, issue: str, prompt: str, result: Dict[str, Any]):
         """Log a repair for future ML training"""
+        now_utc = datetime.now(timezone.utc)
         log_entry = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": now_utc.isoformat(),
             "collector_id": collector_id,
             "issue": issue,
             "prompt": prompt,
@@ -20,7 +21,7 @@ class RepairLogger:
         }
         
         # Append to daily log file
-        log_file = self.log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.jsonl"
+        log_file = self.log_dir / f"{now_utc.strftime('%Y-%m-%d')}.jsonl"
         
         with open(log_file, 'a', encoding='utf-8') as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")

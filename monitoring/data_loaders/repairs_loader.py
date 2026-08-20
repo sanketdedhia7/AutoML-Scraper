@@ -62,7 +62,7 @@ def get_repairs_data() -> list:
         cid = entry.get("collector_id")
         ts = entry.get("timestamp")
         res = entry.get("result") or {}
-        status = res.get("status") or (entry.get("success") and "success") or "error"
+        status = res.get("status") or entry.get("status") or (entry.get("success") and "success") or "error"
         
         # Unique signature: (collector_id, timestamp, status)
         sig = (cid, ts, status)

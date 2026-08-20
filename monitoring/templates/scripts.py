@@ -243,7 +243,7 @@ def get_dashboard_scripts(articles_json: str, quality_stats_json: str, threshold
                     container.innerHTML = '';
                     data.forEach(entry => {{
                         const res = entry.result || {{}};
-                        const status = res.status || (entry.success ? 'success' : 'error');
+                        const status = res.status || entry.status || (entry.success ? 'success' : 'error');
                         let ts = entry.timestamp || '';
                         if (ts) {{
                             let normalized = ts;
