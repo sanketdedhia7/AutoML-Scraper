@@ -17,9 +17,12 @@ class Healer:
         self.mock = MockHealer()
 
     def _mock_mode(self, collector_id: str) -> bool:
-        import shutil
-        if not shutil.which("bdata"):
-            return True
+        """
+        Mock mode for healing is active only when no API key is configured.
+        The CLI binary check has been removed — if the CLI is unavailable on the runtime
+        (e.g. Render), run_heal() will return status="error" which is caught and triggers
+        the Gemini LLM fallback path, rather than silently going into mock mode.
+        """
         return is_mock_mode(collector_id, self.api_key)
 
     def trigger_self_healing(
