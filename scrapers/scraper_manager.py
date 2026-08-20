@@ -22,24 +22,21 @@ class ScraperManager:
         """
         Mock mode is active ONLY when no valid API key is configured.
 
-        The Bright Data CLI binary (bdata) is NOT required for production scraping.
-        The actual data retrieval uses the Bright Data REST API directly.
-        The CLI is only attempted for create_scraper (collector definition), and
-        when not present the code falls back to the REST API trigger path automatically.
+        The Bright Data CLI binary (bdata) is installed globally during Render build
+        (npm install -g @brightdata/cli) so shutil.which("bdata") will find it at runtime.
 
-        Previously this checked shutil.which("bdata") which caused the system to
-        fall into mock mode on Render (where node_modules do not persist to the runtime
-        container even though npm install runs during the build step).
+        Previously this method checked shutil.which("bdata") and forced mock mode when
+        the binary was absent. That caused all Render deploys to use mock data since
+        local (non-global) node_modules installations don't persist to the runtime.
         """
         return not self.api_key or self.api_key == "your_api_key_here"
 
     def create_scraper(self, config_path: str) -> dict:
-        """Create a collector via the Bright Data CLI if available, or REST API fallback.
+        """Create a Scraper Studio collector via CLI (preferred) or REST API fallback.
 
-        On environments where the bdata CLI is not installed (e.g. Render free tier),
-        this method triggers an ad-hoc scrape via the Bright Data dataset trigger REST API
-        instead, which avoids falling into mock mode while still using real Bright Data
-        infrastructure.
+        On Render, the CLI is installed globally via `npm install -g @brightdata/cli`
+        in the buildCommand, so it is available in the runtime PATH.
+        The REST API fallback is used only if the CLI binary is unexpectedly absent.
         """
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -55,10 +52,11 @@ class ScraperManager:
         if self._mock_mode():
             return self._mock_collector(config)
 
-        # Try CLI first (works locally and on environments with Node.js in PATH)
+        # Try CLI first — globally installed on Render, locally installed in dev
         import shutil
         if shutil.which("bdata"):
             try:
+                logging.info(f"Using bdata CLI at: {shutil.which('bdata')}")
                 return self.cli.create_scraper(target_url, description, name=collector_name)
             except Exception as exc:
                 logging.warning(
@@ -66,52 +64,58 @@ class ScraperManager:
                     f"Falling back to REST API collector creation."
                 )
 
-        # CLI not available or failed - use REST API to trigger scrape directly.
-        # This returns a virtual "collector" dict with a real snapshot_id so the
-        # trigger/poll chain in primary_extractor.py continues with real Bright Data data.
+        # CLI not available — use Bright Data REST API to create a Scraper Studio collector
+        logging.info(f"bdata CLI not in PATH. Using REST API to create collector for {target_url}")
         return self._create_via_rest_api(target_url, collector_name, description)
 
     def _create_via_rest_api(self, target_url: str, name: str, description: str) -> dict:
         """
-        Trigger a Bright Data scrape via REST API when the CLI is unavailable.
+        Create a Scraper Studio collector via Bright Data REST API when the CLI is unavailable.
 
-        Uses the /datasets/v3/trigger endpoint which initiates an async scraping job.
-        Returns a dict in the same shape as the CLI output so the existing trigger/poll
-        chain in primary_extractor.py can consume it without modification.
+        Calls POST /dca/collector to create the collector, which returns a collector_id
+        that can then be triggered and polled by the existing primary_extractor flow.
         """
         try:
+            # Create a new Scraper Studio collector via REST API
             response = requests.post(
-                f"{self.base_url}/datasets/v3/trigger",
+                f"{self.base_url}/dca/collector",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
                 },
-                params={"dataset_id": "gd_l1vikfnt1wgvvqz95w", "include_errors": "true"},
-                json=[{"url": target_url}],
+                json={
+                    "name": name,
+                    "url": target_url,
+                    "description": description,
+                },
                 timeout=30,
             )
 
-            if response.status_code == 200:
+            logging.info(f"REST API create collector response: HTTP {response.status_code} - {response.text[:200]}")
+
+            if response.status_code in (200, 201):
                 data = response.json()
-                snapshot_id = data.get("snapshot_id") or data.get("id")
-                logging.info(f"REST API trigger success for {target_url}: snapshot_id={snapshot_id}")
-                return {
-                    "id": snapshot_id or name,
-                    "collector_id": snapshot_id or name,
-                    "name": name,
-                    "status": "created",
-                    "url": target_url,
-                    "snapshot_id": snapshot_id,
-                }
+                collector_id = data.get("collector_id") or data.get("id") or data.get("_id")
+                if collector_id:
+                    logging.info(f"REST API created collector successfully: {collector_id}")
+                    return {
+                        "id": collector_id,
+                        "collector_id": collector_id,
+                        "name": name,
+                        "status": "created",
+                        "url": target_url,
+                    }
+                else:
+                    logging.warning(f"REST API create returned 200 but no collector_id in response: {data}")
             else:
                 logging.warning(
-                    f"REST API trigger returned HTTP {response.status_code} for {target_url}: {response.text}"
+                    f"REST API create collector returned HTTP {response.status_code}: {response.text[:300]}"
                 )
         except Exception as exc:
             logging.warning(f"REST API collector creation failed for {target_url}: {exc}")
 
-        # If REST API also fails, fall back to mock as last resort
-        logging.warning(f"All collector creation methods failed. Returning mock collector for {target_url}.")
+        # If REST API also fails, return mock as absolute last resort
+        logging.warning(f"All collector creation methods failed for {target_url}. Returning api_error mock.")
         return self._mock_collector({"url": target_url, "name": name}, status="api_error")
 
     def _mock_collector(self, config: dict, status: str = "mock_created") -> dict:

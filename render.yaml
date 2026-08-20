@@ -2,7 +2,7 @@ services:
   - type: web
     name: automl-data-curator
     env: python
-    buildCommand: npm install && pip install -r requirements.txt
+    buildCommand: npm install -g @brightdata/cli && npm install && pip install -r requirements.txt
     startCommand: uvicorn monitoring.app:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
     envVars:
