@@ -1,4 +1,4 @@
-﻿import os
+import os
 import uuid
 import json
 import logging
@@ -59,9 +59,11 @@ class ScraperManager:
                 },
                 timeout=60
             )
-            if resp.status_code == 200 and resp.text and len(resp.text.strip()) > 50:
-                logging.info(f"Bright Data Web Unlocker REST API succeeded for {target_url} ({len(resp.text)} bytes).")
-                return resp.text
+            if resp.status_code == 200 and resp.content and len(resp.content.strip()) > 50:
+                # Force UTF-8 decoding to prevent Latin-1 encoding mismatches (like Â£ instead of £)
+                decoded_html = resp.content.decode("utf-8", errors="replace")
+                logging.info(f"Bright Data Web Unlocker REST API succeeded for {target_url} ({len(decoded_html)} characters).")
+                return decoded_html
             else:
                 logging.warning(f"Bright Data REST API returned HTTP {resp.status_code}: {resp.text[:300]}")
         except Exception as e:
