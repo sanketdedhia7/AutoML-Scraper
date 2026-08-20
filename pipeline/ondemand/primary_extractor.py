@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 import json
 import logging
 from bs4 import BeautifulSoup
@@ -70,6 +70,62 @@ class PrimaryExtractor:
                     })
             if articles:
                 return articles
+
+        # Check for book listings (e.g. books.toscrape.com)
+        book_elements = soup.select(".product_pod")
+        if book_elements:
+            md_lines = [
+                f"# Catalog Specimen - {title}",
+                "Successfully extracted structured product catalog details:",
+                ""
+            ]
+            for idx, b in enumerate(book_elements, 1):
+                h3_a = b.select_one("h3 a")
+                title_text = h3_a.get("title") or h3_a.get_text(strip=True) if h3_a else "Unknown Book"
+                
+                price_el = b.select_one(".price_color")
+                price_text = price_el.get_text(strip=True) if price_el else "Unknown Price"
+                
+                avail_el = b.select_one(".instock.availability")
+                avail_text = avail_el.get_text(strip=True) if avail_el else "Unknown Availability"
+                if avail_text:
+                    avail_text = avail_text.strip()
+                
+                rating_el = b.select_one("p.star-rating")
+                rating_classes = rating_el.get("class", []) if rating_el else []
+                rating_text = "Unknown"
+                for c in rating_classes:
+                    if c != "star-rating":
+                        rating_text = c
+                        break
+                
+                img_el = b.select_one(".image_container img")
+                img_src = img_el.get("src") if img_el else ""
+                
+                link_el = b.select_one(".image_container a")
+                link_href = link_el.get("href") if link_el else ""
+                
+                md_lines.append(f"{idx}. **{title_text}**")
+                md_lines.append(f"   - **Price**: {price_text}")
+                md_lines.append(f"   - **Availability**: {avail_text}")
+                md_lines.append(f"   - **Rating**: {rating_text} out of 5 stars")
+                if img_src:
+                    md_lines.append(f"   - **Thumbnail**: {img_src}")
+                if link_href:
+                    md_lines.append(f"   - **Detail Page**: {link_href}")
+                md_lines.append("")
+                
+            cleaned_text = "\n".join(md_lines)
+            return [
+                {
+                    "title": title,
+                    "author": "Bright Data Scraper Studio",
+                    "publication_date": "2026-08-20",
+                    "content": cleaned_text,
+                    "url": target_url,
+                    "language": "en"
+                }
+            ]
 
         # General article text extraction using trafilatura
         cleaned_text = trafilatura.extract(raw_html, include_links=True, include_formatting=False)
