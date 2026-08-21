@@ -67,6 +67,45 @@ It continuously scrapes target websites on-demand using Bright Data's infrastruc
 
 <h2 id="architecture"><img src="https://api.iconify.design/lucide:network.svg?color=%23a855f7" width="26" height="26" style="pointer-events: none;" /> Architecture</h2>
 
+```mermaid
+flowchart TD
+    subgraph CP[Control Plane]
+        Dash[Web Dashboard<br>HTML / Custom CSS]
+        API[FastAPI Backend]
+        Dash <--> API
+    end
+
+    subgraph Ext[Extraction Layer]
+        CLI[Bright Data CLI<br>Primary Extractor]
+    end
+
+    subgraph FB[Fallback Layer]
+        WU[Web Unlocker<br>Safe Fetching]
+        Gemini[Google Gemini LLM<br>Fallback Extractor]
+        WU --> Gemini
+    end
+
+    subgraph SG[Safeguards Engine]
+        Robots[Robots.txt Compliance]
+        Dedup[Deduplicator<br>Embeddings + Jaccard]
+        PII[PII Scrubber<br>Regex + Entity]
+        QS[Quality Scorer]
+        Robots --> Dedup --> PII --> QS
+    end
+
+    subgraph QL[Quarantine Ledger]
+        Data[(JSON Storage<br>data/)]
+    end
+
+    API -->|1. On-Demand Request| CLI
+    CLI -->|Success| SG
+    CLI -->|Failure or DOM Drift| WU
+    Gemini --> SG
+    
+    SG -->|Curated / Pending| QL
+    API <-->|Review / Approve| QL
+```
+
 * **Extraction Layer**: Bright Data Scraper Studio CLI (`bdata scrape`) for primary extraction.
 * **Fallback Layer**: Safe Fetching (using Web Unlocker infrastructure to bypass captchas and rendering blocks) + Google Gemini LLM fallback extraction.
 * **Safeguards Engine**: Deduplicator (Embeddings + Jaccard), PII Scrubber (Regex + Entity matching), Quality Scorer, Robots.txt compliance.
