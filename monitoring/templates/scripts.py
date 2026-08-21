@@ -830,7 +830,15 @@ def get_dashboard_scripts(articles_json: str, quality_stats_json: str, threshold
                 if (textSpan) {{ textSpan.textContent = 'Running Demo Cycle...'; }}
                 try {{
                     const resp = await fetch('/api/run-demo', {{ method: 'POST' }});
-                                           if (textSpan) {{ textSpan.textContent = 'Run Live Demo Cycle'; }}
+                    const data = await resp.json();
+
+                    btn.classList.remove('button-loading');
+
+                    if (data.status === 'success') {{
+                        showToast('Live demo cycle completed!', 'success');
+                        await refreshDashboardDOM();
+                        btn.disabled = false;
+                        if (textSpan) {{ textSpan.textContent = 'Run Live Demo Cycle'; }}
                     }} else {{
                         const msg = 'Demo failed: ' + data.message;
                         showToast(msg, 'error');

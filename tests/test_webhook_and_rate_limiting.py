@@ -42,12 +42,16 @@ def test_api_rate_limiting():
     _request_timestamps.clear()
     client = TestClient(app)
     
-    # Make 10 allowed requests
-    for _ in range(10):
-        resp = client.post("/api/trigger-heal", json={"collector_id": "demo_scraper"})
-        assert resp.status_code == 200
-        
-    # 11th request should be rate limited with HTTP 429
-    resp_overflow = client.post("/api/trigger-heal", json={"collector_id": "demo_scraper"})
-    assert resp_overflow.status_code == 429
-    assert "Rate limit exceeded" in resp_overflow.json()["detail"]
+    # Patch get_client_ip to return a fixed, predictable IP so the rate limiter
+    # accumulates requests under the same key regardless of TestClient's httpx transport.
+    with patch("monitoring.rate_limit.get_client_ip", return_value="1.2.3.4"):
+        # Make 10 allowed requests
+        for _ in range(10):
+            resp = client.post("/api/trigger-heal", json={"collector_id": "demo_scraper"})
+            assert resp.status_code == 200
+            
+        # 11th request should be rate limited with HTTP 429
+        resp_overflow = client.post("/api/trigger-heal", json={"collector_id": "demo_scraper"})
+        assert resp_overflow.status_code == 429
+        assert "Rate limit exceeded" in resp_overflow.json()["detail"]
+
