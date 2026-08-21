@@ -99,20 +99,25 @@ class PrimaryExtractor:
                         rating_text = c
                         break
                 
+                from urllib.parse import urljoin
                 img_el = b.select_one(".image_container img")
                 img_src = img_el.get("src") if img_el else ""
+                if img_src and target_url:
+                    img_src = urljoin(target_url, img_src)
                 
                 link_el = b.select_one(".image_container a")
                 link_href = link_el.get("href") if link_el else ""
+                if link_href and target_url:
+                    link_href = urljoin(target_url, link_href)
                 
                 md_lines.append(f"{idx}. **{title_text}**")
                 md_lines.append(f"   - **Price**: {price_text}")
                 md_lines.append(f"   - **Availability**: {avail_text}")
                 md_lines.append(f"   - **Rating**: {rating_text} out of 5 stars")
                 if img_src:
-                    md_lines.append(f"   - **Thumbnail**: {img_src}")
+                    md_lines.append(f"   - **Thumbnail**: [{img_src}]({img_src})")
                 if link_href:
-                    md_lines.append(f"   - **Detail Page**: {link_href}")
+                    md_lines.append(f"   - **Detail Page**: [{link_href}]({link_href})")
                 md_lines.append("")
                 
             cleaned_text = "\n".join(md_lines)

@@ -59,8 +59,8 @@ def test_parse_books():
     assert "**Price**: £51.77" in content
     assert "**Availability**: In stock" in content
     assert "**Rating**: Three out of 5 stars" in content
-    assert "**Thumbnail**: media/cache/image1.jpg" in content
-    assert "**Detail Page**: catalogue/a-light-in-the-attic_1000/index.html" in content
+    assert "**Thumbnail**: [https://books.toscrape.com/media/cache/image1.jpg](https://books.toscrape.com/media/cache/image1.jpg)" in content
+    assert "**Detail Page**: [https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html](https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html)" in content
     assert articles[0]["title"] == "All products | Books to Scrape"
     assert articles[0]["author"] == "Bright Data Scraper Studio"
 
