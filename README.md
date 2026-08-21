@@ -59,7 +59,7 @@ Then, three months later:
 
 AutoML-Scraper is a **self-healing data curation registry**.
 
-It continuously scrapes target websites on-demand using Bright Data's Web Unlocker. When a target website's layout breaks, an AI-powered diagnostic engine detects the drift, generates a natural language repair prompt, and uses an LLM (Google Gemini) to auto-heal the extraction logic. Collected data is then rigorously deduplicated using SimHash/LSH, scrubbed of PII, and placed in a quarantine workflow for human approval before export.
+It continuously scrapes target websites on-demand using Bright Data's infrastructure. When a target website's layout breaks, an AI-powered diagnostic engine detects the drift, generates a natural language repair prompt, and uses an LLM (Google Gemini) to auto-heal the extraction logic. Collected data is then rigorously deduplicated using SentenceTransformer embeddings (Cosine Similarity) with a Jaccard fallback, scrubbed of PII, and placed in a quarantine workflow for human approval before export.
 
 **Three-word summary: Scrape → Auto-Heal → Curate.**
 
@@ -67,10 +67,10 @@ It continuously scrapes target websites on-demand using Bright Data's Web Unlock
 
 <h2 id="architecture"><img src="https://api.iconify.design/lucide:network.svg?color=%23a855f7" width="26" height="26" style="pointer-events: none;" /> Architecture</h2>
 
-* **Extraction Layer**: Bright Data Scraper Studio CLI (`bdata scrape`) + REST API Fallbacks. Uses advanced Web Unlocker infrastructure to bypass captchas and rendering blocks.
-* **Fallback Layer**: Safe Fetching + Google Gemini LLM fallback extraction.
-* **Safeguards Engine**: Deduplicator (LSH + SimHash), PII Scrubber (Regex + Entity matching), Quality Scorer, Robots.txt compliance.
-* **Control Plane**: FastAPI Backend + HTML/Tailwind web dashboard.
+* **Extraction Layer**: Bright Data Scraper Studio CLI (`bdata scrape`) for primary extraction.
+* **Fallback Layer**: Safe Fetching (using Web Unlocker infrastructure to bypass captchas and rendering blocks) + Google Gemini LLM fallback extraction.
+* **Safeguards Engine**: Deduplicator (Embeddings + Jaccard), PII Scrubber (Regex + Entity matching), Quality Scorer, Robots.txt compliance.
+* **Control Plane**: FastAPI Backend + HTML/Custom CSS (Kintsugi theme) web dashboard.
 * **Quarantine Ledger**: JSON-based storage (`data/`) holding raw, pending, and curated specimens.
 
 ---
@@ -79,11 +79,11 @@ It continuously scrapes target websites on-demand using Bright Data's Web Unlock
 
 | # | Feature | What It Does | Implementation |
 |---|---------|-------------|----------------|
-| 1 | **Scraper Studio Integration** | Invokes Bright Data Web Unlocker to bypass blocks and retrieve raw HTML payload | `pipeline/ondemand/primary_extractor.py` |
+| 1 | **Scraper Studio Integration** | Invokes Bright Data CLI for primary template-based extraction | `pipeline/ondemand/primary_extractor.py` |
 | 2 | **Auto-Healer (DOM Drift Detection)** | Identifies when extracted fields are empty and triggers self-healing using AI | `healing/healer.py` + `pipeline/ondemand/gemini_extractor.py` |
-| 3 | **Near-Duplicate Detection** | Prevents poisoning datasets with duplicate content using Locality Sensitive Hashing (LSH) & SimHash | `pipeline/safeguards/deduplicator.py` |
-| 4 | **PII Scrubbing** | Redacts Emails, Phone Numbers, SSNs, and Credit Cards from text before saving | `pipeline/safeguards/pii_scrubber.py` |
-| 5 | **Quality Scoring** | Evaluates boilerplate ratio, text density, and assigns a composite 0-100 score | `pipeline/safeguards/quality_scorer.py` |
+| 3 | **Near-Duplicate Detection** | Prevents poisoning datasets with duplicate content using SentenceTransformer embeddings (Cosine Similarity) & Jaccard fallback | `pipeline/deduplicator.py` |
+| 4 | **PII Scrubbing** | Redacts Emails and Phone Numbers from text before saving | `pipeline/cleaner/pii_redactor.py` |
+| 5 | **Quality Scoring** | Evaluates boilerplate ratio, text density, and assigns a composite 0-100 score | `pipeline/quality_scorer.py` |
 | 6 | **Quarantine & Approval Workflow** | Stages extracted specimens into a quarantine state allowing human review via dashboard | `pipeline/ondemand/quarantine_repository.py` |
 | 7 | **Heuristic LLM Fallback** | Falls back to Google Gemini if Primary Bright Data extractor encounters errors | `pipeline/ondemand/gemini_extractor.py` |
 
@@ -91,7 +91,7 @@ It continuously scrapes target websites on-demand using Bright Data's Web Unlock
 
 <h2 id="bright-data-integration"><img src="https://api.iconify.design/lucide:bot.svg?color=%23ff6b35" width="26" height="26" style="pointer-events: none;" /> Bright Data Integration</h2>
 
-This project deeply integrates with Bright Data's global proxy and scraping infrastructure to guarantee 100% extraction success.
+This project deeply integrates with Bright Data's global proxy and scraping infrastructure to gracefully recover from extraction failures and maximize extraction success.
 
 | Component | Description |
 |---|---|
@@ -106,7 +106,7 @@ For demonstration purposes in Mock Mode, submitting URLs containing `"fail"`, `"
 
 <h2 id="dashboard-views"><img src="https://api.iconify.design/lucide:layout-dashboard.svg?color=%2361dafb" width="26" height="26" style="pointer-events: none;" /> Dashboard Views</h2>
 
-The web dashboard (HTML + TailwindCSS + JavaScript) provides a unified control panel:
+The web dashboard (HTML + Custom CSS Kintsugi Theme + JavaScript) provides a unified control panel:
 
 | View | Description |
 |---|---|
@@ -125,9 +125,11 @@ The web dashboard (HTML + TailwindCSS + JavaScript) provides a unified control p
 ├── healing/               # AI Auto-healer modules (DOM drift detection)
 ├── monitoring/            # FastAPI Backend, Dashboard Templates, and Logger
 ├── pipeline/              # ETL Core
+│   ├── cleaner/           # PII Redaction and HTML cleaning
 │   ├── ondemand/          # Primary Extractor, Gemini Fallback, Quarantine Logic
-│   ├── safeguards/        # PII Scrubber, Deduplicator, Quality Scorer, Robots Checker
-│   └── scraper_runner/    # Runner polling and async triggers
+│   ├── scraper_runner/    # Runner polling and async triggers
+│   ├── deduplicator.py    # Embeddings-based near-duplicate detection
+│   └── quality_scorer.py  # Evaluates text density and boilerplate ratio
 ├── scrapers/              # Bright Data CLI integration (studio_cli.py, scraper_manager.py)
 ├── scripts/               # Utility scripts (run_pipeline, export_training_data)
 ├── tests/                 # 79+ Comprehensive pytest suite
@@ -186,9 +188,9 @@ Navigate to `http://localhost:8000` to access the Self-Healing Web Scraping Regi
 <h2 id="tech-stack"><img src="https://api.iconify.design/lucide:layers.svg?color=%23a855f7" width="26" height="26" style="pointer-events: none;" /> Tech Stack</h2>
 
 - **Backend**: Python, FastAPI, Uvicorn
-- **AI & NLP**: Google Gemini API, SentenceTransformers (LSH/SimHash)
+- **AI & NLP**: Google Gemini API, SentenceTransformers
 - **Scraping Infrastructure**: Bright Data Web Unlocker, `@brightdata/cli`, Trafilatura, BeautifulSoup4
-- **Frontend**: HTML5, TailwindCSS, Vanilla JS
+- **Frontend**: HTML5, Custom CSS Kintsugi Theme, Vanilla JS
 - **Deployment**: Render
 
 ---
