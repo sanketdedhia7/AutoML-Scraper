@@ -34,7 +34,7 @@ def execute_ondemand_job(job_id: str, target_url: str):
         result = runner.run_ondemand_scrape(target_url, update_progress_cb=update_progress)
         job["status"] = "completed"
         job["step_message"] = result.get("message", "Scrape completed.")
-        job["extraction_method"] = result.get("extraction_method")
+        job["extraction_source"] = result.get("extraction_source") or result.get("extraction_method")
         job["result"] = result
         job["error"] = None
     except ValueError as ve:

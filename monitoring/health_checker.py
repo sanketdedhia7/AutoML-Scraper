@@ -39,7 +39,7 @@ class HealthChecker:
                 # Load local raw pipeline artifacts if they exist
                 if not raw_path.exists():
                     if collector_id == "demo_scraper":
-                        from scrapers.collector_registry import ScraperManager
+                        from scrapers.scraper_manager import ScraperManager
                         output = ScraperManager()._run_demo_scraper_parser()
                     elif collector_id.startswith("ondemand_"):
                         scored_path = self.data_dir.parent / "scored" / f"{collector_id}.json"

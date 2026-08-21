@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from pipeline.security import resolve_and_validate_ip, pinned_dns_context, safe_fetch_html
 from pipeline.ondemand_schemas import OnDemandArticleSchema, OnDemandResponseSchema
 from pipeline.deduplicator import Deduplicator
-from monitoring.routes import app
+from monitoring.app import app
 
 client = TestClient(app)
 
@@ -104,14 +104,14 @@ def test_api_scrape_url_ssrf_blocking():
 
 def test_api_scrape_url_valid_queue(monkeypatch):
     """Verify valid public URL returns job_id and queues job."""
-    from monitoring.routes import _ondemand_ip_timestamps, _ondemand_global_timestamps
+    from monitoring.rate_limit import _ondemand_ip_timestamps, _ondemand_global_timestamps
     _ondemand_ip_timestamps.clear()
     _ondemand_global_timestamps.clear()
 
     # Mock network fetch, DNS validation, ScraperManager CLI, and SentenceTransformer model load
-    monkeypatch.setattr("monitoring.routes.resolve_and_validate_ip", lambda host: "93.184.216.34")
+    monkeypatch.setattr("pipeline.security.resolve_and_validate_ip", lambda host: "93.184.216.34")
     monkeypatch.setattr("pipeline.ondemand.fallback_extractor.safe_fetch_html", lambda url, **kwargs: "<h1>Test Page</h1><p>This is a test article body content for unit testing.</p>")
-    monkeypatch.setattr("scrapers.collector_registry.ScraperManager.create_scraper", lambda self, cfg: {"id": "col_mock123", "status": "mock"})
+    monkeypatch.setattr("scrapers.scraper_manager.ScraperManager.create_scraper", lambda self, cfg: {"id": "col_mock123", "status": "mock"})
     monkeypatch.setattr("pipeline.deduplicator._get_sentence_transformer", lambda: None)
     
     headers = {"Origin": "http://testserver"}

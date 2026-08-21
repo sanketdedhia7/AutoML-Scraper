@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from pipeline.scraper_runner import ScraperRunner
 from pipeline.utils import TIMEOUT_API_REQUEST, TIMEOUT_HEAL_SUBPROCESS, TIMEOUT_WAIT_COMPLETION
-from monitoring.routes import app
+from monitoring.app import app
 
 def test_configurable_timeouts_exist():
     assert isinstance(TIMEOUT_API_REQUEST, int)

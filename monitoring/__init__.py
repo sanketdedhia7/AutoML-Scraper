@@ -1,3 +1,3 @@
-from monitoring.routes import app
+from monitoring.app import app
 
 __all__ = ["app"]

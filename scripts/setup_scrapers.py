@@ -5,7 +5,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from scrapers.collector_registry import ScraperManager
+from scrapers.scraper_manager import ScraperManager
 
 def main():
     import json

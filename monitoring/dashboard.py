@@ -7,7 +7,7 @@ Existing invocation commands such as `uvicorn monitoring.dashboard:app` continue
 
 import os
 import uvicorn
-from monitoring.routes import app
+from monitoring.app import app
 
 __all__ = ["app"]
 

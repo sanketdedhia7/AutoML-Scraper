@@ -26,7 +26,7 @@ class QuarantineRepository:
             "status": "awaiting_approval",
             "preview_result": processed_articles,
             "diff_summary": f"Extracted {len(processed_articles)} new specimens awaiting manual review.",
-            "extraction_method": extraction_source
+            "extraction_source": extraction_source
         }
 
         quarantine_file = repairs_dir / f"quarantine_{collector_id}.json"

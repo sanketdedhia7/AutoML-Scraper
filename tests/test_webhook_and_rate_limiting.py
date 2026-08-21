@@ -4,7 +4,8 @@ from fastapi.testclient import TestClient
 
 from monitoring.alerts import Alerter
 from pipeline.quality_scorer import QualityScorer
-from monitoring.routes import app, _request_timestamps
+from monitoring.app import app
+from monitoring.rate_limit import _request_timestamps
 
 def test_alerter_retries_webhook_on_failure(monkeypatch):
     alerter = Alerter()

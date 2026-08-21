@@ -7,7 +7,7 @@ from monitoring.dependencies import verify_same_origin
 from monitoring.rate_limit import rate_limit_ondemand
 from monitoring.job_store import OnDemandJobStore
 from monitoring.job_service import execute_ondemand_job
-import monitoring.routes
+from pipeline.security import resolve_and_validate_ip
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ async def api_scrape_url(request: Request, background_tasks: BackgroundTasks):
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
             return JSONResponse({"status": "error", "message": "Invalid URL scheme or missing hostname."}, status_code=400)
-        monitoring.routes.resolve_and_validate_ip(parsed.hostname)
+        resolve_and_validate_ip(parsed.hostname)
     except Exception as ve:
         return JSONResponse({"status": "error", "message": f"URL validation failed: {str(ve)}"}, status_code=400)
 

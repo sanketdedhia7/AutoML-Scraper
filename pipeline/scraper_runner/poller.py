@@ -23,7 +23,7 @@ def fetch_scraper_output(collector_id, base_url, api_key, logger, robots_checker
 
     # Special case: deterministic demo scraper (HTML fixture parser)
     if collector_id == "demo_scraper" or str(collector_id).startswith("col_demo"):
-        from scrapers.collector_registry import ScraperManager
+        from scrapers.scraper_manager import ScraperManager
         return ScraperManager()._run_demo_scraper_parser()
 
     if check_mock_mode(collector_id, api_key):

@@ -77,5 +77,5 @@ class OnDemandRunner:
             "collector_id": collector_id,
             "quarantined": True,
             "duplicates_removed": duplicates_removed,
-            "extraction_method": actual_source
+            "extraction_source": actual_source
         }

@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from monitoring.routes import app
+from monitoring.app import app
 from monitoring.dashboard import app as app_shim
 
 client = TestClient(app)

@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print(f"Starting server on port {PORT} (static mode, no reload to ensure IDE stability)...")
     
     # We use sys.executable to run uvicorn in the current python environment
-    cmd = [sys.executable, "-m", "uvicorn", "monitoring.routes:app", "--host", "127.0.0.1", "--port", str(PORT)]
+    cmd = [sys.executable, "-m", "uvicorn", "monitoring.app:app", "--host", "127.0.0.1", "--port", str(PORT)]
     
     # Run the server
     try:
